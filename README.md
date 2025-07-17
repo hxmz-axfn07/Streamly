@@ -1,4 +1,4 @@
-# 🎬 Aki Personal Stream Aggregator
+# 🎬 Streamly
 
 A modern, responsive web application that aggregates streaming sources for movies and TV shows using the TMDb API. Built with Flask and vanilla JavaScript, featuring a beautiful glassmorphism UI design.
 
@@ -39,8 +39,8 @@ A modern, responsive web application that aggregates streaming sources for movie
 
 1. **Clone the repository**
    ```bash
-   git clone https://github.com/yourusername/aki-stream-aggregator.git
-   cd aki-stream-aggregator
+   git clone https://github.com/yourusername/streamly.git
+   cd streamly
    ```
 
 2. **Create virtual environment**
@@ -96,7 +96,7 @@ A modern, responsive web application that aggregates streaming sources for movie
 ## 📁 Project Structure
 
 ```
-aki-stream-aggregator/
+streamly/
 ├── app.py                 # Main Flask application
 ├── config.py             # Configuration management
 ├── .env                  # Environment variables (create this)
@@ -341,7 +341,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 If you encounter any issues or have questions:
 
 1. Check the [Troubleshooting](#-troubleshooting) section
-2. Search existing [GitHub Issues](https://github.com/yourusername/aki-stream-aggregator/issues)
+2. Search existing [GitHub Issues](https://github.com/yourusername/streamly/issues)
 3. Create a new issue with detailed information about your problem
 
 ## 🔄 Updates
