@@ -1,4 +1,4 @@
-# 🎬 Streamly
+# Streamly
 
 A modern, responsive web application that aggregates streaming sources for movies and TV shows using the TMDb API. Built with Flask and vanilla JavaScript, featuring a beautiful glassmorphism UI design.
 
@@ -7,29 +7,29 @@ A modern, responsive web application that aggregates streaming sources for movie
 ![Flask](https://img.shields.io/badge/flask-2.0+-green.svg)
 ![JavaScript](https://img.shields.io/badge/javascript-ES6+-yellow.svg)
 
-## ✨ Features
+## Features
 
-### 🎯 Core Functionality
+### Core Functionality
 - **Universal Search**: Search for movies and TV shows with real-time suggestions
 - **Multiple Streaming Sources**: Aggregates from VidSrc.to, VidSrc.me, SuperEmbed, and 2Embed
 - **Genre Discovery**: Browse content by trending, action, comedy, drama, horror, and sci-fi
 - **TV Show Support**: Full season and episode selection for TV series
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
 
-### 🛡️ Security & Performance
+### 🛡Security & Performance
 - **Rate Limiting**: Built-in API rate limiting to prevent abuse
 - **Error Handling**: Comprehensive error handling with user-friendly messages
 - **Content Filtering**: Automatic filtering of adult content
 - **Caching Ready**: Configurable caching system for improved performance
 
-### 🎨 User Experience
+### User Experience
 - **Glassmorphism UI**: Modern, translucent design with blur effects
 - **Auto-suggestions**: Real-time search suggestions as you type
 - **Keyboard Shortcuts**: Ctrl/Cmd + K to focus search, Escape to close suggestions
 - **Loading States**: Smooth loading animations and progress indicators
 - **Mobile Optimized**: Touch-friendly interface with responsive grid layouts
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Prerequisites
 - Python 3.7 or higher
@@ -93,7 +93,7 @@ A modern, responsive web application that aggregates streaming sources for movie
    
    Open your browser and navigate to `http://localhost:5000`
 
-## 📁 Project Structure
+## Project Structure
 
 ```
 streamly/
@@ -113,7 +113,7 @@ streamly/
     └── index.html       # Main HTML template
 ```
 
-## 🔧 Configuration
+## Configuration
 
 ### Environment Variables
 
@@ -139,7 +139,7 @@ streamly/
 5. Fill out the form with your application details
 6. Copy your API key to the `.env` file
 
-## 📚 API Endpoints
+## API Endpoints
 
 ### Search
 - `GET /api/search?q={query}&type={media_type}`
@@ -162,7 +162,7 @@ streamly/
   - Body: `{"imdb_id": "tt1234567", "media_type": "movie"}`
   - For TV: Include `"season": 1, "episode": 1`
 
-## 🎨 Customization
+## Customization
 
 ### Styling
 The application uses a glassmorphism design with CSS custom properties. Key styling files:
@@ -198,7 +198,7 @@ To add a new streaming source:
 ### Themes
 The application supports easy theme customization through CSS variables. Modify the gradient backgrounds and glassmorphism effects in `style.css`.
 
-## 🔒 Security Features
+## Security Features
 
 - **Rate Limiting**: 30-60 requests per minute per IP
 - **Input Validation**: All user inputs are validated and sanitized
@@ -206,7 +206,7 @@ The application supports easy theme customization through CSS variables. Modify 
 - **Content Filtering**: Adult content is automatically filtered out
 - **Error Handling**: Secure error messages without exposing system details
 
-## 📱 Mobile Support
+## Mobile Support
 
 The application is fully responsive with:
 - Touch-friendly interface
@@ -215,7 +215,7 @@ The application is fully responsive with:
 - Mobile-optimized video player
 - Responsive grid systems
 
-## 🚀 Deployment
+## Deployment
 
 ### Local Development
 ```bash
@@ -280,7 +280,7 @@ python app.py
 - **Styling**: Modern CSS with glassmorphism effects
 - **API**: RESTful endpoints with proper error handling
 
-## 🐛 Troubleshooting
+## Troubleshooting
 
 ### Common Issues
 
@@ -317,11 +317,11 @@ Enable debug mode for detailed error messages:
 DEBUG=True
 ```
 
-## 📄 License
+## License
 
 This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
 
-## 🤝 Contributing
+## Contributing
 
 1. Fork the repository
 2. Create a feature branch (`git checkout -b feature/amazing-feature`)
@@ -329,14 +329,14 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 4. Push to the branch (`git push origin feature/amazing-feature`)
 5. Open a Pull Request
 
-## 🙏 Acknowledgments
+## Acknowledgments
 
 - [TMDb](https://www.themoviedb.org/) for providing the movie and TV show database API
 - [VidSrc](https://vidsrc.to/) and other streaming source providers
 - Flask community for the excellent web framework
 - Contributors and users of this project
 
-## 📞 Support
+## Support
 
 If you encounter any issues or have questions:
 
@@ -344,7 +344,7 @@ If you encounter any issues or have questions:
 2. Search existing [GitHub Issues](https://github.com/yourusername/streamly/issues)
 3. Create a new issue with detailed information about your problem
 
-## 🔄 Updates
+## Updates
 
 ### Version 1.0.0
 - Initial release with core functionality
