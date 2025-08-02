@@ -16,7 +16,7 @@ A modern, responsive web application that aggregates streaming sources for movie
 - **TV Show Support**: Full season and episode selection for TV series
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
 
-### 🛡Security & Performance
+### Security & Performance
 - **Rate Limiting**: Built-in API rate limiting to prevent abuse
 - **Error Handling**: Comprehensive error handling with user-friendly messages
 - **Content Filtering**: Automatic filtering of adult content
