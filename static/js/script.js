@@ -8,6 +8,7 @@ class StreamAggregator {
 
     init() {
         this.bindEvents();
+        this.bindPlayerEvents();
         this.setupAutoSuggest();
         this.loadRandomSuggestions('trending'); // Load initial suggestions
         this.setupGenreTabs();
@@ -24,6 +25,34 @@ class StreamAggregator {
         
         document.getElementById('fullscreenBtn').addEventListener('click', () => this.toggleFullscreen());
         document.getElementById('subtitleBtn').addEventListener('click', () => this.toggleSubtitles());
+    }
+
+    bindPlayerEvents() {
+        window.addEventListener('message', (event) => {
+            if (event.origin !== 'https://www.vidking.net' || typeof event.data !== 'string') return;
+
+            try {
+                const message = JSON.parse(event.data);
+                if (message.type !== 'PLAYER_EVENT' || !message.data) return;
+
+                const data = message.data;
+                if (!['timeupdate', 'pause', 'seeked', 'ended'].includes(data.event)) return;
+                if (!Number.isFinite(data.currentTime) || data.currentTime < 0) return;
+
+                const key = this.progressKey(data.mediaType, data.id, data.season, data.episode);
+                if (data.event === 'ended') {
+                    localStorage.removeItem(key);
+                } else {
+                    localStorage.setItem(key, String(Math.floor(data.currentTime)));
+                }
+            } catch (error) {
+                console.warn('Ignored malformed player event.', error);
+            }
+        });
+    }
+
+    progressKey(mediaType, id, season, episode) {
+        return `streamly:vidking:${mediaType}:${id}:${season || 0}:${episode || 0}`;
     }
 
     setupAutoSuggest() {
@@ -255,24 +284,11 @@ class StreamAggregator {
     }
 
     async setupMovie(movieData) {
-        const imdbId = movieData.external_ids?.imdb_id;
-        if (!imdbId) {
-            alert('IMDb ID not found for this movie.');
-            return;
-        }
-        
         document.getElementById('episodeSelector').style.display = 'none';
-        await this.loadMovieSources(imdbId);
+        await this.loadMoviePlayer(movieData.id);
     }
 
     async setupTVShow(tvData) {
-        const imdbId = tvData.external_ids?.imdb_id;
-        if (!imdbId) {
-            alert('IMDb ID not found for this TV show.');
-            return;
-        }
-        
-        this.currentSelection.imdbId = imdbId;
         await this.loadSeasons(tvData.id);
         document.getElementById('episodeSelector').style.display = 'block';
     }
@@ -328,90 +344,56 @@ class StreamAggregator {
         
         if (!season || !episode) return;
         
-        await this.loadTVSources(this.currentSelection.imdbId, season, episode);
+        await this.loadTVPlayer(this.currentSelection.id, season, episode);
     }
 
-    async loadMovieSources(imdbId) {
+    async loadMoviePlayer(tmdbId) {
         this.showLoading(true);
-        
         try {
-            const response = await fetch('/api/stream', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    imdb_id: imdbId,
-                    media_type: 'movie'
-                })
-            });
-            
+            const progress = Number(localStorage.getItem(this.progressKey('movie', tmdbId))) || 0;
+            const response = await fetch('/api/stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tmdb_id: tmdbId, media_type: 'movie', progress }) });
             const data = await response.json();
-            this.displaySources(data.sources);
+            if (!response.ok) throw new Error(data.error || 'Failed to load player');
+            this.displayPlayer(data.player);
         } catch (error) {
-            console.error('Error loading movie sources:', error);
-            alert('Failed to load streaming sources.');
+            console.error('Error loading movie player:', error);
+            alert('Failed to load player.');
         } finally {
             this.showLoading(false);
         }
     }
 
-    async loadTVSources(imdbId, season, episode) {
+    async loadTVPlayer(tmdbId, season, episode) {
         this.showLoading(true);
-        
         try {
-            const response = await fetch('/api/stream', {
-                method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({
-                    imdb_id: imdbId,
-                    media_type: 'tv',
-                    season: season,
-                    episode: episode
-                })
-            });
-            
+            const progress = Number(localStorage.getItem(this.progressKey('tv', tmdbId, season, episode))) || 0;
+            const response = await fetch('/api/stream', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ tmdb_id: tmdbId, media_type: 'tv', season, episode, progress }) });
             const data = await response.json();
-            this.displaySources(data.sources);
+            if (!response.ok) throw new Error(data.error || 'Failed to load player');
+            this.displayPlayer(data.player);
         } catch (error) {
-            console.error('Error loading TV sources:', error);
-            alert('Failed to load streaming sources.');
+            console.error('Error loading TV player:', error);
+            alert('Failed to load player.');
         } finally {
             this.showLoading(false);
         }
     }
 
-    displaySources(sources) {
-        this.currentSources = sources;
+    displayPlayer(player) {
         const container = document.getElementById('sources');
-        
-        container.innerHTML = sources.map((source, index) => `
-            <button class="source-btn" onclick="app.loadVideo('${source.url}', '${source.name}', ${index})">
-                ${source.name}
-                <span class="quality-badge">${source.quality}</span>
-                ${source.subtitles ? '<span class="subtitle-icon"></span>' : ''}
-            </button>
-        `).join('');
-        
+        container.innerHTML = '<p class="player-status">Vidking Player ready. Resume progress saved on this device.</p>';
         document.getElementById('sourceSelector').style.display = 'block';
-        
-        // Auto-load first source
-        if (sources.length > 0) {
-            this.loadVideo(sources[0].url, sources[0].name, 0);
-        }
+        this.loadVideo(player);
     }
 
-    loadVideo(url, sourceName, index) {
+    loadVideo(player) {
         const videoPlayer = document.getElementById('videoPlayer');
         const videoTitle = document.getElementById('videoTitle');
         const videoContainer = document.getElementById('videoContainer');
-        
-        // Update active source button
-        document.querySelectorAll('.source-btn').forEach((btn, i) => {
-            btn.classList.toggle('active', i === index);
-        });
-        
-        // Set video source
-        videoPlayer.src = url;
-        videoTitle.textContent = `Now Playing - ${sourceName}`;
+        const url = new URL(player.url);
+        Object.entries(player.params).forEach(([key, value]) => url.searchParams.set(key, value));
+        videoPlayer.src = url.toString();
+        videoTitle.textContent = `Now Playing - ${player.name}`;
         videoContainer.style.display = 'block';
         
         // Scroll to video
@@ -479,4 +461,3 @@ document.addEventListener('keydown', (e) => {
         document.getElementById('searchInput').focus();
     }
 });
-

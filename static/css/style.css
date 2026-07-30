@@ -223,6 +223,10 @@ header h1 {
     margin-top: 15px;
 }
 
+.player-status {
+    color: #dfefff;
+}
+
 .source-btn {
     display: flex;
     align-items: center;

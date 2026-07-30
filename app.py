@@ -6,10 +6,11 @@ from config import (
     HOST,
     PORT,
     TMDB_API_KEY,
-    ENABLE_VIDSRC_TO,
-    ENABLE_VIDSRC_ME,
-    ENABLE_SUPEREMBED,
-    ENABLE_2EMBED
+    VIDKING_BASE_URL,
+    VIDKING_COLOR,
+    VIDKING_AUTOPLAY,
+    VIDKING_NEXT_EPISODE,
+    VIDKING_EPISODE_SELECTOR,
 )
 import logging
 from functools import wraps
@@ -216,89 +217,15 @@ class StreamAggregator:
             logger.error(f"Error getting suggestions for genre {genre}: {e}")
             return []
 
-    def get_streaming_sources(
-        self, imdb_id, media_type="movie", season=None, episode=None
-    ):
-        """Get streaming sources from various providers"""
-        sources = []
-
-        # Clean IMDb ID
-        imdb_id = imdb_id.replace("tt", "") if imdb_id.startswith("tt") else imdb_id
-        imdb_id = f"tt{imdb_id}"
-
-        # VidSrc.to
-        if ENABLE_VIDSRC_TO:
-            if media_type == "movie":
-                vidsrc_url = f"https://vidsrc.to/embed/movie/{imdb_id}"
-            else:
-                vidsrc_url = f"https://vidsrc.to/embed/tv/{imdb_id}/{season}/{episode}"
-
-            sources.append(
-                {
-                    "name": "VidSrc.to",
-                    "url": vidsrc_url,
-                    "quality": "HD",
-                    "subtitles": True,
-                    "type": "iframe",
-                }
-            )
-
-        # VidSrc.me
-        if ENABLE_VIDSRC_ME:
-            if media_type == "movie":
-                vidsrc_me_url = f"https://vidsrc.me/embed/movie?imdb={imdb_id}"
-            else:
-                vidsrc_me_url = f"https://vidsrc.me/embed/tv?imdb={imdb_id}"
-                f"&season={season}&episode={episode}"
-
-            sources.append(
-                {
-                    "name": "VidSrc.me",
-                    "url": vidsrc_me_url,
-                    "quality": "HD",
-                    "subtitles": True,
-                    "type": "iframe",
-                }
-            )
-
-        # SuperEmbed
-        if ENABLE_SUPEREMBED:
-            if media_type == "movie":
-                superembed_url = (
-                    f"https://multiembed.mov/directstream.php?video_id={imdb_id}"
-                )
-            else:
-                superembed_url = f"https://multiembed.mov/directstream.php?video_id={imdb_id}&s={season}&e={episode}"
-
-            sources.append(
-                {
-                    "name": "SuperEmbed",
-                    "url": superembed_url,
-                    "quality": "HD",
-                    "subtitles": False,
-                    "type": "iframe",
-                }
-            )
-
-        # 2embed
-        if ENABLE_2EMBED:
-            if media_type == "movie":
-                embed2_url = f"https://www.2embed.to/embed/imdb/movie?id={imdb_id}"
-            else:
-                embed2_url = f"https://www.2embed.to/embed/imdb/tv?id={imdb_id}&s={season}"
-                f"&e={episode}"
-
-            sources.append(
-                {
-                    "name": "2Embed",
-                    "url": embed2_url,
-                    "quality": "HD",
-                    "subtitles": True,
-                    "type": "iframe",
-                }
-            )
-
-        return sources
+    def get_vidking_player(self, tmdb_id, media_type="movie", season=None, episode=None, progress=None):
+        """Build Vidking player URL from documented TMDb-based routes."""
+        path = f"/embed/movie/{tmdb_id}" if media_type == "movie" else f"/embed/tv/{tmdb_id}/{season}/{episode}"
+        params = {"color": VIDKING_COLOR, "autoPlay": str(VIDKING_AUTOPLAY).lower()}
+        if media_type == "tv":
+            params.update({"nextEpisode": str(VIDKING_NEXT_EPISODE).lower(), "episodeSelector": str(VIDKING_EPISODE_SELECTOR).lower()})
+        if progress is not None:
+            params["progress"] = progress
+        return {"name": "Vidking Player", "url": f"{VIDKING_BASE_URL}{path}", "params": params, "type": "iframe"}
 
 
 aggregator = StreamAggregator()
@@ -390,28 +317,26 @@ def get_stream():
         if not data:
             return jsonify({"error": "Invalid JSON data"}), 400
 
-        imdb_id = data.get("imdb_id")
+        tmdb_id = data.get("tmdb_id")
         media_type = data.get("media_type", "movie")
         season = data.get("season")
         episode = data.get("episode")
 
-        if not imdb_id:
-            return jsonify({"error": "IMDb ID required"}), 400
+        if type(tmdb_id) is not int or tmdb_id < 1:
+            return jsonify({"error": "Valid TMDb ID required"}), 400
 
         # Validate media type
         if media_type not in ["movie", "tv"]:
             return jsonify({"error": "Invalid media type"}), 400
 
         # For TV shows, season and episode are required
-        if media_type == "tv" and (not season or not episode):
+        if media_type == "tv" and (type(season) is not int or type(episode) is not int or season < 0 or episode < 1):
             return jsonify({"error": "Season and episode required for TV shows"}), 400
 
-        sources = aggregator.get_streaming_sources(imdb_id, media_type, season, episode)
-
-        if not sources:
-            return jsonify({"error": "No streaming sources found"}), 404
-
-        return jsonify({"sources": sources})
+        progress = data.get("progress")
+        if progress is not None and (type(progress) not in (int, float) or progress < 0):
+            return jsonify({"error": "Progress must be a non-negative number"}), 400
+        return jsonify({"player": aggregator.get_vidking_player(tmdb_id, media_type, season, episode, progress)})
 
     except Exception as e:
         logger.error(f"Stream API error: {e}")

@@ -11,7 +11,7 @@ A modern, responsive web application that aggregates streaming sources for movie
 
 ### Core Functionality
 - **Universal Search**: Search for movies and TV shows with real-time suggestions
-- **Multiple Streaming Sources**: Aggregates from VidSrc.to, VidSrc.me, SuperEmbed, and 2Embed
+- **Vidking Player**: TMDb-ID based iframe player with configurable color and TV controls
 - **Genre Discovery**: Browse content by trending, action, comedy, drama, horror, and sci-fi
 - **TV Show Support**: Full season and episode selection for TV series
 - **Responsive Design**: Works seamlessly on desktop, tablet, and mobile devices
@@ -74,11 +74,12 @@ A modern, responsive web application that aggregates streaming sources for movie
    HOST=0.0.0.0
    PORT=5000
    
-   # Streaming Sources (enable/disable)
-   ENABLE_VIDSRC_TO=True
-   ENABLE_VIDSRC_ME=True
-   ENABLE_SUPEREMBED=True
-   ENABLE_2EMBED=True
+   # Vidking Player
+   VIDKING_BASE_URL=https://www.vidking.net
+   VIDKING_COLOR=0dcaf0
+   VIDKING_AUTOPLAY=False
+   VIDKING_NEXT_EPISODE=True
+   VIDKING_EPISODE_SELECTOR=True
    
    # Cache Settings
    CACHE_TIMEOUT=3600
@@ -124,10 +125,11 @@ streamly/
 | `SECRET_KEY` | Flask secret key for sessions | Generated | No |
 | `HOST` | Server host address | `0.0.0.0` | No |
 | `PORT` | Server port number | `5000` | No |
-| `ENABLE_VIDSRC_TO` | Enable VidSrc.to source | `True` | No |
-| `ENABLE_VIDSRC_ME` | Enable VidSrc.me source | `True` | No |
-| `ENABLE_SUPEREMBED` | Enable SuperEmbed source | `True` | No |
-| `ENABLE_2EMBED` | Enable 2Embed source | `True` | No |
+| `VIDKING_BASE_URL` | Vidking player origin | `https://www.vidking.net` | No |
+| `VIDKING_COLOR` | Primary player color, hex without `#` | `0dcaf0` | No |
+| `VIDKING_AUTOPLAY` | Start playback automatically | `False` | No |
+| `VIDKING_NEXT_EPISODE` | Show next-episode control for TV | `True` | No |
+| `VIDKING_EPISODE_SELECTOR` | Show episode selector in TV player | `True` | No |
 | `CACHE_TIMEOUT` | Cache timeout in seconds | `3600` | No |
 
 ### Getting TMDb API Key
@@ -158,9 +160,9 @@ streamly/
 - `GET /api/tv/{tv_id}/season/{season_number}/episodes` - Get season episodes
 
 ### Streaming
-- `POST /api/stream` - Get streaming sources
-  - Body: `{"imdb_id": "tt1234567", "media_type": "movie"}`
-  - For TV: Include `"season": 1, "episode": 1`
+- `POST /api/stream` - Get Vidking player configuration
+  - Body: `{"tmdb_id": 1078605, "media_type": "movie", "progress": 120}`
+  - For TV: Include `"season": 1, "episode": 8`
 
 ## Customization
 
@@ -170,30 +172,9 @@ The application uses a glassmorphism design with CSS custom properties. Key styl
 - Glassmorphism effects with `backdrop-filter` and `rgba` backgrounds
 - CSS Grid and Flexbox for responsive layouts
 
-### Adding New Streaming Sources
-To add a new streaming source:
+### Watch Progress
 
-1. Update the configuration in `config.py`:
-   ```python
-   ENABLE_NEW_SOURCE = os.getenv('ENABLE_NEW_SOURCE', 'True').lower() == 'true'
-   ```
-
-2. Add the source logic in `app.py` within the `get_streaming_sources` method:
-   ```python
-   if ENABLE_NEW_SOURCE:
-       if media_type == "movie":
-           new_source_url = f"https://newsource.com/embed/movie/{imdb_id}"
-       else:
-           new_source_url = f"https://newsource.com/embed/tv/{imdb_id}/{season}/{episode}"
-       
-       sources.append({
-           "name": "New Source",
-           "url": new_source_url,
-           "quality": "HD",
-           "subtitles": True,
-           "type": "iframe"
-       })
-   ```
+Vidking events are accepted only from `https://www.vidking.net`. Streamly saves the reported playback timestamp in browser localStorage and passes it back as Vidking's `progress` URL parameter when that same movie or TV episode is opened again. Finished titles clear saved progress.
 
 ### Themes
 The application supports easy theme customization through CSS variables. Modify the gradient backgrounds and glassmorphism effects in `style.css`.
